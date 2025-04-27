@@ -47,7 +47,20 @@ az aks create \
   --appgw-name myApplicationGateway \  # Application Gatewayの名前
   --appgw-subnet-cidr "10.225.0.0/16" \  # Application Gateway用サブネット
   --generate-ssh-keys
+
+# Azure Load Balancerを使用したAKSクラスターの作成
+az aks create \
+  -n $AKS_NAME \
+  -g $RESOURCE_GROUP \
+  --location $LOCATION \
+  --network-plugin azure \
+  --enable-managed-identity \
+  --load-balancer-sku standard \
+  --generate-ssh-keys
 ```
+
+
+
 
 ## 3. AGICアドオンの権限設定
 
