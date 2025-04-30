@@ -5,7 +5,7 @@ metadata:
   labels:
     app: nginx
 spec:
-  replicas: 12
+  replicas: 2
   selector:
     matchLabels:
       app: nginx
@@ -14,8 +14,8 @@ spec:
       labels:
         app: nginx
     spec:
-      nodeSelector:
-        agentpool: nginxpool
+      # nodeSelector:
+      #   agentpool: nodepool1
       containers:
       - name: nginx
         image: nginx:latest
@@ -48,7 +48,6 @@ metadata:
   name: nginx-service-internal
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-    service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "ilb"
 spec:
   type: LoadBalancer
   ports:
