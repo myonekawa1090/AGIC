@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns-mayoneka
+  labels:
+    app: coredns-mayoneka
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: coredns-mayoneka
+  template:
+    metadata:
+      labels:
+        app: coredns-mayoneka
+    spec:
+      containers:
+      - name: coredns
+        image: coredns/coredns:latest
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        args: 
+        - -conf
+        - /etc/coredns/Corefile
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+      volumes:
+      - name: config-volume
+        configMap:
+          name: coredns-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-config
+data:
+  Corefile: |
+    .:53 {
+        Log
+        errors
+        health
+        hosts {
+            192.168.1.200 a.mayoneka.local
+            192.168.1.201 b.mayoneka.local
+            192.168.1.202 c.mayoneka.local
+            fallthrough
+        }
+        ready
+        forward . 8.8.8.8
+        loop
+        reload
+        loadbalance
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns-service-public
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 53
+    targetPort: 53
+    protocol: UDP
+  - port: 53
+    targetPort: 53
+    protocol: TCP
+  selector:
+    app: coredns-mayoneka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns-service-internal
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 53
+    targetPort: 53
+    protocol: UDP
+  - port: 53
+    targetPort: 53
+    protocol: TCP
+  selector:
+    app: coredns-mayoneka
